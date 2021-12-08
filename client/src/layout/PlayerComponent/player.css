@@ -12,6 +12,7 @@
     cursor: pointer;
     border-radius: 0;
     height: 2px;
+    width: 100%;
 }
 input[type="range"]::-moz-range-thumb {
     height: 10px;
@@ -28,4 +29,61 @@ input[type="range"] {
 }
 .play-btn:hover {
     transform: scale(1.1);
+}
+
+.progress-bar-div {
+    height: 3px;
+    display: flex;
+    align-items: center;
+    background-image: linear-gradient(
+        64.5deg,
+        rgba(245, 116, 185, 1) 14.7%,
+        rgba(89, 97, 223, 1) 88.7%
+    );
+}
+.progress-bar-wraper {
+    background-color: aliceblue;
+}
+.progress-bar-wraper:hover .progress-bar-div {
+    background-color: #ac5fdb;
+}
+/* .progress-bar-div::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ac5fdb;
+    position: absolute;
+    right: 0;
+} */
+.progress-bar-wraper:hover .thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #e4e4e4;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 20;
+}
+
+.volume-bar-div {
+    height: 3px;
+    position: absolute;
+    z-index: 10;
+    /* background-color: #e980fc; */
+    background-image: linear-gradient(
+        109.6deg,
+        rgba(102, 203, 149, 1) 11.2%,
+        rgba(39, 210, 175, 1) 98.7%
+    );
+}
+
+.volume-controller-wraper:hover .thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #e4e4e4;
+    top: 50%;
+    transform: translateY(-50%);
 }

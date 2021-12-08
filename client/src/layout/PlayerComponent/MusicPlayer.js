@@ -7,12 +7,13 @@ const MusicPlayer = () => {
     const [percentage, setPercentage] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
     const audioRef = useRef();
+    const progress_bar = useRef();
     const [duration, setDuration] = useState(0);
     const [loop, setLoop] = useState(false);
     const [currentSongIndex, setCurrentSongIndex] = useState(0);
     const [isSaved, setIsSaved] = useState(false);
     const [Data, setData] = useState(initialData);
-    console.log(Data);
+    const [marginLeft, setMarginLeft] = useState(0);
 
     const onAudioLoad = (e) => {
         setPercentage(0);
@@ -78,11 +79,15 @@ const MusicPlayer = () => {
         if (+vol === 0) {
             audio.volume = 0;
         }
+        // <i class="bx bx-volume"></i>;
+        // setVolumeStatus("bx bx-volume-low");
 
         let volPerc = Math.trunc(vol * 100);
         if (volPerc === 0) {
             setVolumeStatus("bx bx-volume-mute");
-        } else if (volPerc > 0 && volPerc < 50) {
+        } else if (volPerc > 0 && volPerc < 20) {
+            setVolumeStatus("bx bx-volume");
+        } else if (volPerc > 10 && volPerc < 60) {
             setVolumeStatus("bx bx-volume-low");
         } else {
             setVolumeStatus("bx bx-volume-full");
@@ -105,12 +110,17 @@ const MusicPlayer = () => {
         setPercentage(+percent);
         setCurrentTime(time.toFixed(2));
     };
-
     const sliderValue = (e) => {
         const audio = audioRef.current;
         audio.currentTime = (audio.duration / 100) * e.target.value;
         setPercentage(e.target.value);
     };
+
+    useEffect(() => {
+        const thumbWidth = 12;
+        const centerThumb = (thumbWidth / 100) * percentage * -1;
+        setMarginLeft(centerThumb);
+    }, [percentage]);
 
     useEffect(() => {
         const audio = audioRef.current;
@@ -155,9 +165,9 @@ const MusicPlayer = () => {
                     </button>
                 </div>
 
-                <div className="w-1/3">
+                <div className="w-2/5">
                     <div className="flex w-full justify-center items-center -mb-2">
-                        <button className="text-md text-gray-500">
+                        <button className="text-md m-2 text-gray-500">
                             <i className="bx bx-shuffle"></i>
                         </button>
                         <button
@@ -189,26 +199,44 @@ const MusicPlayer = () => {
                             onClick={toggleLoop}
                             className={`${
                                 loop ? "text-gray-200" : "text-gray-500"
-                            } 'text-lg' `}
+                            } 'text-lg'  m-2 `}
                         >
                             <i className="bx bx-repeat"></i>
                         </button>
                     </div>
 
                     <div className="flex items-center">
-                        <h3 className="text-gray-100 text-xs p-1">
+                        <h3 className="text-gray-100 text-xs m-2">
                             {fancyTimeFormat(currentTime)}
                         </h3>
-                        <input
-                            type="range"
-                            className="w-full progress-bar"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            onChange={(e) => sliderValue(e)}
-                            value={percentage}
-                        />
-                        <h3 className="text-gray-100 text-xs p-1">
+
+                        <div className="w-full relative flex items-center bg-gray-300 progress-bar-wraper">
+                            <div
+                                ref={progress_bar}
+                                style={{
+                                    width: `${percentage}%`,
+                                }}
+                                className=" progress-bar-div z-10 relative"
+                            ></div>
+                            <span
+                                style={{
+                                    left: `${percentage}%`,
+                                    marginLeft: `${marginLeft}px`,
+                                }}
+                                className="thumb absolute"
+                            ></span>
+                            <input
+                                type="range"
+                                className="w-full progress-bar absolute opacity-0 z-50"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                onChange={(e) => sliderValue(e)}
+                                value={percentage}
+                            />
+                        </div>
+
+                        <h3 className="text-gray-100 text-xs m-2">
                             {fancyTimeFormat(duration)}
                         </h3>
 
@@ -223,20 +251,38 @@ const MusicPlayer = () => {
                 </div>
 
                 <div className="flex w-1/3 justify-end items-center">
+                    <i class="bx bxs-playlist text-lg mr-3 text-gray-200 cursor-pointer"></i>
                     <i
                         onClick={() => setVol(0)}
                         className={`${volumeStatus} text-lg mr-3 text-gray-200 cursor-pointer`}
                     ></i>
 
-                    <input
-                        type="range"
-                        min="0.0"
-                        max="0.9"
-                        step="0.01"
-                        value={vol}
-                        className="cursor-pointer"
-                        onChange={(event) => volumeControl(event)}
-                    />
+                    <div className="audio relative w-max h-max flex volume-controller-wraper bg-gray-300 ">
+                        <div
+                            ref={progress_bar}
+                            style={{
+                                width: `${vol * 100}%`,
+                            }}
+                            className="volume-bar-div z-10 "
+                        ></div>
+                        <span
+                            style={{
+                                left: `${vol * 100}%`,
+                                marginLeft: `${marginLeft}px`,
+                            }}
+                            className="thumb absolute z-20"
+                        ></span>
+
+                        <input
+                            type="range"
+                            min="0.0"
+                            max="1.0"
+                            step="0.01"
+                            value={vol}
+                            className="cursor-pointer opacity-0 z-50"
+                            onChange={(event) => volumeControl(event)}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
