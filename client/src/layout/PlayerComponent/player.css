@@ -1,5 +1,5 @@
 .player {
-    height: 90px;
+    height: 10%;
 }
 .like-btn {
     transition: 0.2s all ease-in-out;
@@ -74,7 +74,7 @@ input[type="range"] {
     /* background-color: #e980fc; */
     background-image: linear-gradient(
         109.6deg,
-        rgba(102, 203, 149, 1) 11.2%,
+        rgb(77, 253, 159) 11.2%,
         rgba(39, 210, 175, 1) 98.7%
     );
 }
@@ -86,4 +86,10 @@ input[type="range"] {
     background-color: #e4e4e4;
     top: 50%;
     transform: translateY(-50%);
+}
+.main-container {
+    width: 1900px !important;
+    max-width: 90%;
+    margin-right: auto;
+    margin-left: auto;
 }

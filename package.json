@@ -1,0 +1,26 @@
+{
+    "dependencies": {
+        "concurrently": "^7.0.0"
+    },
+    "name": "music-player-react",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "client": "cd client && yarn start",
+        "backend": "cd backend && yarn dev",
+        "dev": "concurrently -n 'Backend,Frontend' -c 'green,blue' \"yarn backend\" \"yarn client\"",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/NoTSuRe0099/music-player-react.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/NoTSuRe0099/music-player-react/issues"
+    },
+    "homepage": "https://github.com/NoTSuRe0099/music-player-react#readme",
+    "description": ""
+}

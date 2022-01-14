@@ -1,5 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Data as initialData } from "../../Data";
+import React, {
+    useState,
+    useEffect,
+    useRef,
+    useCallback,
+    useContext,
+} from "react";
+import { playlistContext } from "../../playlistContext";
 import "./player.css";
 
 const MusicPlayer = () => {
@@ -10,32 +16,83 @@ const MusicPlayer = () => {
     const progress_bar = useRef();
     const [duration, setDuration] = useState(0);
     const [loop, setLoop] = useState(false);
-    const [currentSongIndex, setCurrentSongIndex] = useState(0);
-    const [isSaved, setIsSaved] = useState(false);
-    const [Data, setData] = useState(initialData);
     const [marginLeft, setMarginLeft] = useState(0);
+    const [volumeStatus, setVolumeStatus] = useState("bx bx-volume-low");
+    const [vol, setVol] = useState(0.1);
+    const {
+        currentSong,
+        currentSongIndex,
+        setCurrentSongIndex,
+        Data,
+        handleLikedSong,
+    } = useContext(playlistContext);
 
     const onAudioLoad = (e) => {
         setPercentage(0);
         setDuration(e.currentTarget.duration.toFixed(2));
     };
 
-    const nextSong = () => {
+    //? Volume Controll
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (+vol === 0) {
+            audio.volume = 0;
+        }
+
+        let volPerc = Math.trunc(vol * 100);
+        if (volPerc === 0) {
+            setVolumeStatus("bx bx-volume-mute");
+        } else if (volPerc > 0 && volPerc < 20) {
+            setVolumeStatus("bx bx-volume");
+        } else if (volPerc > 10 && volPerc < 60) {
+            setVolumeStatus("bx bx-volume-low");
+        } else {
+            setVolumeStatus("bx bx-volume-full");
+        }
+    }, [vol]);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        audio.volume = +vol;
+    }, [vol]);
+
+    const volumeControl = (event) => {
+        // let volPercent = Math.trunc(+event.target.value * 100);
+        setVol(event.target.value);
+        const audio = audioRef.current;
+        audio.volume = event.target.value;
+    };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const nextSong = useCallback(() => {
         if (currentSongIndex >= Data.length - 1) {
             setCurrentSongIndex(Data.length - 1);
         } else {
-            setCurrentSongIndex(currentSongIndex + 1);
+            setCurrentSongIndex(currentSong.index + 1);
         }
         const audio = audioRef.current;
         audio.autoplay = true;
         setIsPlaying(true);
-    };
+    });
+
+    //? ---------- Auto Play -------------
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (isPlaying) {
+            if (audio.duration) {
+                if (currentTime === duration) {
+                    nextSong();
+                }
+            }
+        }
+    }, [currentTime, duration, isPlaying, nextSong]);
 
     const previousSong = () => {
         if (currentSongIndex === 0) {
             setCurrentSongIndex(0);
         } else {
-            setCurrentSongIndex(currentSongIndex - 1);
+            setCurrentSongIndex(currentSong.index - 1);
         }
         const audio = audioRef.current;
         audio.autoplay = true;
@@ -60,7 +117,8 @@ const MusicPlayer = () => {
         return ret;
     }
 
-    const play = () => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const play = useCallback(() => {
         setIsPlaying(!isPlaying);
         const audio = audioRef.current;
         audio.volume = +vol;
@@ -71,35 +129,7 @@ const MusicPlayer = () => {
         if (isPlaying) {
             audio.pause();
         }
-    };
-    const [volumeStatus, setVolumeStatus] = useState("bx bx-volume-low");
-    const [vol, setVol] = useState(0.1);
-    useEffect(() => {
-        const audio = audioRef.current;
-        if (+vol === 0) {
-            audio.volume = 0;
-        }
-        // <i class="bx bx-volume"></i>;
-        // setVolumeStatus("bx bx-volume-low");
-
-        let volPerc = Math.trunc(vol * 100);
-        if (volPerc === 0) {
-            setVolumeStatus("bx bx-volume-mute");
-        } else if (volPerc > 0 && volPerc < 20) {
-            setVolumeStatus("bx bx-volume");
-        } else if (volPerc > 10 && volPerc < 60) {
-            setVolumeStatus("bx bx-volume-low");
-        } else {
-            setVolumeStatus("bx bx-volume-full");
-        }
-    }, [vol]);
-
-    const volumeControl = (event) => {
-        // let volPercent = Math.trunc(+event.target.value * 100);
-        setVol(event.target.value);
-        const audio = audioRef.current;
-        audio.volume = event.target.value;
-    };
+    });
 
     const getCurrDuration = (e) => {
         const percent = (
@@ -110,9 +140,12 @@ const MusicPlayer = () => {
         setPercentage(+percent);
         setCurrentTime(time.toFixed(2));
     };
+
     const sliderValue = (e) => {
         const audio = audioRef.current;
-        audio.currentTime = (audio.duration / 100) * e.target.value;
+        if (audio.currentTime) {
+            audio.currentTime = (audio.duration / 100) * e.target.value;
+        }
         setPercentage(e.target.value);
     };
 
@@ -131,37 +164,61 @@ const MusicPlayer = () => {
         setLoop(!loop);
     };
 
-    function handleKeyPress() {
-        console.log("You pressed a key.");
-    }
+    //* Key Handler for Play/Pause
+    useEffect(() => {
+        function handleKeyDown(e) {
+            // console.log(e.keyCode);
+            if (e.keyCode === 32) {
+                play();
+            }
+        }
+        document.addEventListener("keydown", handleKeyDown);
+        // Don't forget to clean up
+        return function cleanup() {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [play]);
 
     return (
-        <div className="player w-full bg-primary absolute bottom-0 right-0 z-50 flex flex-col justify-center">
+        <div className="player w-full bg-primary absolute bottom-0 right-0 z-50 flex flex-col justify-center ">
             <span className=" h-px w-full bg-gray-500 absolute top-0"></span>
-            <div className="flex items-center justify-between px-4 ">
+            <div className="flex items-center justify-between mx-4">
                 <div className="w-1/3 flex items-center ">
                     <div className="w-14">
-                        <img src={Data[currentSongIndex].image} alt="fafwaf" />
+                        <img
+                            src={
+                                currentSong.data
+                                    ? currentSong.data.image
+                                    : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0oxE8xF7tEirlo_5eZcK7z25aZtg91fmzxmYC7bYzgBbN-x-2OeZQld9cRFNwzwOzr4E&usqp=CAU"
+                            }
+                            alt="fafwaf"
+                        />
                     </div>
 
                     <span className="mx-4 w-max">
                         <h2 className="text-sm text-gray-100 font-semibold truncate w-48 lg:w-max ">
-                            {Data[currentSongIndex].name}
+                            {currentSong.data ? currentSong.data.name : null}
                         </h2>
-                        <h2 className="text-xs text-gray-400 font-semibold">
-                            {Data[currentSongIndex].Artist}
-                        </h2>
+                        <div className="flex">
+                            <h2 className="text-xs text-gray-400 font-semibold">
+                                {currentSong.data
+                                    ? currentSong.data.artist
+                                    : null}
+                            </h2>
+                        </div>
                     </span>
 
                     <button
-                        onClick={() => setIsSaved(!isSaved)}
+                        onClick={() => handleLikedSong(currentSongIndex)}
                         className="text-white text-lg "
                     >
-                        {isSaved ? (
-                            <i class="bx bxs-heart text-red-500 like-btn"></i>
-                        ) : (
-                            <i class="bx bx-heart  like-btn"></i>
-                        )}
+                        {currentSong.data ? (
+                            currentSong.data.isSaved ? (
+                                <i className="bx bxs-heart text-red-500 like-btn"></i>
+                            ) : (
+                                <i className="bx bx-heart  like-btn"></i>
+                            )
+                        ) : null}
                     </button>
                 </div>
 
@@ -178,9 +235,8 @@ const MusicPlayer = () => {
                         </button>
 
                         <button
-                            className="w-8 h-8 play-btn hover:bg-gray-300 rounded-full bg-gray-100 flex justify-center items-center pointer"
+                            className="w-8 h-8 play-btn hover:bg-gray-300 rounded-full bg-gray-100 flex justify-center items-center pointer outline-none"
                             onClick={() => play()}
-                            onKeyPress={(e) => handleKeyPress(e)}
                         >
                             {isPlaying ? (
                                 <i className="bx bx-pause text-3xl"></i>
@@ -210,7 +266,7 @@ const MusicPlayer = () => {
                             {fancyTimeFormat(currentTime)}
                         </h3>
 
-                        <div className="w-full relative flex items-center bg-gray-300 progress-bar-wraper">
+                        <div className="w-full relative flex items-center bg-gray-300 progress-bar-wraper ">
                             <div
                                 ref={progress_bar}
                                 style={{
@@ -244,14 +300,17 @@ const MusicPlayer = () => {
                             ref={audioRef}
                             onTimeUpdate={getCurrDuration}
                             onLoadedData={(e) => onAudioLoad(e)}
-                            // src="./Audio/Jaan Nisaar Lyrical Kedarnath.mp3"
-                            src={Data[currentSongIndex].song}
+                            src={
+                                currentSong.data
+                                    ? currentSong.data.songUrl
+                                    : null
+                            }
                         />
                     </div>
                 </div>
 
                 <div className="flex w-1/3 justify-end items-center">
-                    <i class="bx bxs-playlist text-lg mr-3 text-gray-200 cursor-pointer"></i>
+                    <i className="bx bxs-playlist text-lg mr-3 text-gray-200 cursor-pointer"></i>
                     <i
                         onClick={() => setVol(0)}
                         className={`${volumeStatus} text-lg mr-3 text-gray-200 cursor-pointer`}

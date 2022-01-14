@@ -71,9 +71,9 @@ const Dashboard = (props) => {
                     className={linkWraperClass}
                 >
                     <div className={icon_wraper}>
-                        <i className="bx bx-music"></i>
+                        <i className="bx bx-home"></i>
                     </div>
-                    <h3 className={link_title}>Song's List</h3>
+                    <h3 className={link_title}>Home</h3>
                 </NavLink>
 
                 <NavLink
